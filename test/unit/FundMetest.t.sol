@@ -3,21 +3,23 @@
 pragma solidity ^0.8.18;
 
 import {Test, console} from "forge-std/Test.sol";
-import {FundMe} from "../src/FundMe.sol";
-import {DeployFundMe} from "../script/DeployFundMe.s.sol";
+import {FundMe} from "../../src/FundMe.sol";
+import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
+
 
 contract FundMeTest is Test {
     FundMe fundMe;
+
     address USER = makeAddr("user"); //we can use this user when we want to work with somebody
-    uint256 constant SEND_VALUE = 0.1 ether; // that makes it 100000000000000000
+    uint256 constant SEND_VALUE = 0.01 ether; // that makes it 100000000000000000
     uint256 constant STARTING_BALANCE = 10 ether;
     uint256 constant GAS_PRICE = 1;
 
 function setUp() external {
     // fundMe = new FundMe(0x106379F11C3cF4027C38655b79327081eA9C9Cf5);   OJO este numero copiado del curso!!!
-    DeployFundMe deployFundMe = new DeployFundMe();
-    fundMe = deployFundMe.run();
-    vm.deal(USER, 100e18);
+    DeployFundMe deploy = new DeployFundMe();
+    fundMe = deploy.run();
+    vm.deal(USER, STARTING_BALANCE);
 }
     function testMinimumDollarFive() public view {
         assertEq(fundMe.MINIMUM_USD(), 5e18);
@@ -44,14 +46,18 @@ function setUp() external {
     function testFundFailsWithoutEnoughETH() public{
         vm.expectRevert(); //hey the next line should revert!!
         // assert (This tx fails/reverts)
-        fundMe.fund(); //send with no value, 0 value
+        fundMe.fund{value: 0}(); //send with no value, 0 value
     }
 
     function testFundUpdatesFundedDataStructure() public {
         vm.prank(USER); // The next TX will be sent by USER... the following fundME.fund will be sent by USER
+        console.log("FundMe contract balance before funding: ", address(fundMe).balance);
         fundMe.fund{value: SEND_VALUE}(); //vamos a enviar lo que hemos determinado arriba en una variable, mas que 5$
+        console.log("FundMe contract balance after funding: ", address(fundMe).balance);
+
         uint256 amountFunded = fundMe.getAddressToAmountFunded(USER);
         assertEq(amountFunded, SEND_VALUE);
+        console.log("User balance after funding: ", address(USER).balance);
     
     }
 // reset everything every simgle time as it will run SetUp and then the function, again SetUp and the other function
@@ -83,7 +89,7 @@ modifier funded() {
 
         // Act
         uint256 gasStart = gasleft();  //Lets say 1000, we had
-        vm.txGasPrice(GAS_PRICE); // min 12:19
+        // vm.txGasPrice(GAS_PRICE); // min 12:19
         vm.prank(fundMe.getOwner());  //c: 200, we spend
         fundMe.withdraw();
 
@@ -139,10 +145,19 @@ modifier funded() {
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
         uint256 startingFundMeBalance = address(fundMe).balance;
 
+    // Debugging: Log balances before withdrawal
+    //   console.log("Starting Owner Balance: ", startingOwnerBalance);
+    //    console.log("Starting FundMe Balance: ", startingFundMeBalance);
+
     // Act
         vm.startPrank(fundMe.getOwner());
         fundMe.cheaperWithdraw();
         vm.stopPrank();
+    // Debugging: Log balances after withdrawal
+    console.log("Final Owner Balance: ", fundMe.getOwner().balance);
+    console.log("Final FundMe Balance: ", address(fundMe).balance);
+
+    
 
     // Assert
         assert(address(fundMe).balance == 0);

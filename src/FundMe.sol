@@ -50,13 +50,19 @@ contract FundMe {
         _;
     }
 
-    function cheaperWithdraw() public onlyOwner{
-        uint256 fundersLength = s_funders.length; //meaning we´ll read it from storage once and then
-        for (uint256 funderIndex = 0; funderIndex > fundersLength; funderIndex++){
-            address funder = s_funders[funderIndex];
-            s_addressToAmountFunded[funder] = 0;  //so we are going to loop from this array from for, reading from memory
-        }
+function cheaperWithdraw() public onlyOwner {
+    uint256 fundersLength = s_funders.length; // Cache the length of the array
+    for (uint256 funderIndex = 0; funderIndex < fundersLength; funderIndex++) {
+        address funder = s_funders[funderIndex];
+        s_addressToAmountFunded[funder] = 0; // Reset the funding amount for each funder
     }
+    // Clear the funders array after processing
+    delete s_funders;
+
+    // Transfer all funds to the owner
+    (bool success, ) = payable(i_owner).call{value: address(this).balance}("");
+    require(success, "Transfer failed");
+}
 
     function withdraw() public onlyOwner {
         for (
@@ -69,14 +75,7 @@ contract FundMe {
         }
 
         s_funders = new address[](0);
-        // // transfer
-        // payable(msg.sender).transfer(address(this).balance);
 
-        // // send
-        // bool sendSuccess = payable(msg.sender).send(address(this).balance);
-        // require(sendSuccess, "Send failed");
-
-        // call
         (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
         require(callSuccess, "Call failed");
     }
