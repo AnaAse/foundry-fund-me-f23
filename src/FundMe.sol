@@ -11,7 +11,7 @@ contract FundMe {
     using PriceConverter for uint256;
 
     mapping(address => uint256) private s_addressToAmountFunded; //antes sin s_, ahora hemos añadido
-    address[] private s_funders;  //antes sin s_, ahora hemos añadido
+    address[] private s_funders; //antes sin s_, ahora hemos añadido
 
     // Could we make this constant?  /* hint: no! We should make it immutable! */
     address private immutable i_owner;
@@ -25,20 +25,16 @@ contract FundMe {
 
     //function fund() public payable {
     //    require(msg.value.getConversionRate() >= MINIMUM_USD, "You need to spend more ETH!");
-        // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
+    // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
     //  addressToAmountFunded[msg.sender] += msg.value;
     //  funders.push(msg.sender);
     //}
 
     function fund() public payable {
-    require(
-        msg.value.getConversionRate(s_priceFeed) >= MINIMUM_USD,
-        "You need to spend more ETH!"
-    );
-    s_addressToAmountFunded[msg.sender] += msg.value;
-    s_funders.push(msg.sender);
-}
-
+        require(msg.value.getConversionRate(s_priceFeed) >= MINIMUM_USD, "You need to spend more ETH!");
+        s_addressToAmountFunded[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
+    }
 
     function getVersion() public view returns (uint256) {
         return s_priceFeed.version();
@@ -50,26 +46,22 @@ contract FundMe {
         _;
     }
 
-function cheaperWithdraw() public onlyOwner {
-    uint256 fundersLength = s_funders.length; // Cache the length of the array
-    for (uint256 funderIndex = 0; funderIndex < fundersLength; funderIndex++) {
-        address funder = s_funders[funderIndex];
-        s_addressToAmountFunded[funder] = 0; // Reset the funding amount for each funder
-    }
-    // Clear the funders array after processing
-    delete s_funders;
+    function cheaperWithdraw() public onlyOwner {
+        uint256 fundersLength = s_funders.length; // Cache the length of the array
+        for (uint256 funderIndex = 0; funderIndex < fundersLength; funderIndex++) {
+            address funder = s_funders[funderIndex];
+            s_addressToAmountFunded[funder] = 0; // Reset the funding amount for each funder
+        }
+        // Clear the funders array after processing
+        delete s_funders;
 
-    // Transfer all funds to the owner
-    (bool success, ) = payable(i_owner).call{value: address(this).balance}("");
-    require(success, "Transfer failed");
-}
+        // Transfer all funds to the owner
+        (bool success,) = payable(i_owner).call{value: address(this).balance}("");
+        require(success, "Transfer failed");
+    }
 
     function withdraw() public onlyOwner {
-        for (
-            uint256 funderIndex = 0; 
-            funderIndex < s_funders.length; 
-            funderIndex++
-            ) {
+        for (uint256 funderIndex = 0; funderIndex < s_funders.length; funderIndex++) {
             address funder = s_funders[funderIndex];
             s_addressToAmountFunded[funder] = 0;
         }
@@ -102,20 +94,17 @@ function cheaperWithdraw() public onlyOwner {
      * View / Pure functions are going to be our Getters
      */
 
-    function getAddressToAmountFunded(
-        address fundingAddress
-        ) external view returns(uint256) {
-            return s_addressToAmountFunded[fundingAddress];
-        }
-    
-    function getFunder(uint256 index) external view returns(address){
-            return s_funders[index];
+    function getAddressToAmountFunded(address fundingAddress) external view returns (uint256) {
+        return s_addressToAmountFunded[fundingAddress];
     }
 
-    function getOwner()external view returns (address) {
+    function getFunder(uint256 index) external view returns (address) {
+        return s_funders[index];
+    }
+
+    function getOwner() external view returns (address) {
         return i_owner;
     }
-    
 }
 
 // Concepts we didn't cover yet (will cover in later sections)

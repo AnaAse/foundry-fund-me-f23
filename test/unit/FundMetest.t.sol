@@ -6,7 +6,6 @@ import {Test, console} from "forge-std/Test.sol";
 import {FundMe} from "../../src/FundMe.sol";
 import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
 
-
 contract FundMeTest is Test {
     FundMe fundMe;
 
@@ -15,15 +14,17 @@ contract FundMeTest is Test {
     uint256 constant STARTING_BALANCE = 10 ether;
     uint256 constant GAS_PRICE = 1;
 
-function setUp() external {
-    // fundMe = new FundMe(0x106379F11C3cF4027C38655b79327081eA9C9Cf5);   OJO este numero copiado del curso!!!
-    DeployFundMe deploy = new DeployFundMe();
-    fundMe = deploy.run();
-    vm.deal(USER, STARTING_BALANCE);
-}
+    function setUp() external {
+        // fundMe = new FundMe(0x106379F11C3cF4027C38655b79327081eA9C9Cf5);   OJO este numero copiado del curso!!!
+        DeployFundMe deploy = new DeployFundMe();
+        fundMe = deploy.run();
+        vm.deal(USER, STARTING_BALANCE);
+    }
+
     function testMinimumDollarFive() public view {
         assertEq(fundMe.MINIMUM_USD(), 5e18);
     }
+
     function testOwnerIsMsgSender() public view {
         assertEq(fundMe.getOwner(), msg.sender);
 
@@ -37,13 +38,14 @@ function setUp() external {
         // 4. Staging
         //   - Testing our code in a real environment that is not production
     }
-    function testPriceFeedVersionIsAccurate() public view{
+
+    function testPriceFeedVersionIsAccurate() public view {
         uint256 version = fundMe.getVersion();
         assertTrue(version == 4 || version == 6, "Version must be 4 or 6");
         // assertEq(version, 4);
     }
 
-    function testFundFailsWithoutEnoughETH() public{
+    function testFundFailsWithoutEnoughETH() public {
         vm.expectRevert(); //hey the next line should revert!!
         // assert (This tx fails/reverts)
         fundMe.fund{value: 0}(); //send with no value, 0 value
@@ -58,42 +60,44 @@ function setUp() external {
         uint256 amountFunded = fundMe.getAddressToAmountFunded(USER);
         assertEq(amountFunded, SEND_VALUE);
         console.log("User balance after funding: ", address(USER).balance);
-    
     }
-// reset everything every simgle time as it will run SetUp and then the function, again SetUp and the other function
-    function testAddsFunderToArrayOfFunders() public{
-      vm.prank(USER);
-      fundMe.fund{value: SEND_VALUE}();
+    // reset everything every simgle time as it will run SetUp and then the function, again SetUp and the other function
 
-      address funder = fundMe.getFunder(0);
-      assertEq(funder, USER);
-    }
+    function testAddsFunderToArrayOfFunders() public {
+        vm.prank(USER);
+        fundMe.fund{value: SEND_VALUE}();
 
-modifier funded() {
-    vm.prank(USER);
-    fundMe.fund{value: SEND_VALUE}();
-    _;
-}
-// any test we write after the above modifier, if we add the funded
-    function testOnlyOwnerCanWithdraw() public funded{  //this funded comes from the modifier to avoid repeating code
-      vm.prank(USER);
-      vm.expectRevert();
-      fundMe.withdraw();
+        address funder = fundMe.getFunder(0);
+        assertEq(funder, USER);
     }
 
-    function testWithDrawWithASingleFunder() public funded{
-        //Arrange . The test we are testing the withdraw at FundMe.sol. 
+    modifier funded() {
+        vm.prank(USER);
+        fundMe.fund{value: SEND_VALUE}();
+        _;
+    }
+    // any test we write after the above modifier, if we add the funded
+
+    function testOnlyOwnerCanWithdraw() public funded {
+        //this funded comes from the modifier to avoid repeating code
+        vm.prank(USER);
+        vm.expectRevert();
+        fundMe.withdraw();
+    }
+
+    function testWithDrawWithASingleFunder() public funded {
+        //Arrange . The test we are testing the withdraw at FundMe.sol.
         // Before we have to see whats our balance before so that we can compare our balances after
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
         uint256 startingFundMeBalance = address(fundMe).balance;
 
         // Act
-        uint256 gasStart = gasleft();  //Lets say 1000, we had
+        uint256 gasStart = gasleft(); //Lets say 1000, we had
         // vm.txGasPrice(GAS_PRICE); // min 12:19
-        vm.prank(fundMe.getOwner());  //c: 200, we spend
+        vm.prank(fundMe.getOwner()); //c: 200, we spend
         fundMe.withdraw();
 
-        uint256 gasEnd = gasleft();  // 800 left
+        uint256 gasEnd = gasleft(); // 800 left
         uint256 gasUsed = (gasStart - gasEnd) * tx.gasprice;
         console.log(gasUsed);
 
@@ -103,12 +107,13 @@ modifier funded() {
         assertEq(endingFundMeBalance, 0);
         assertEq(startingFundMeBalance + startingOwnerBalance, endingOwnerBalance);
     }
+
     function testWithdrawFromMultipleFunders() public funded {
         // Arrange
         uint160 numberOfFunders = 10; //if you want to use number to generate addresses you must use uint160 instead of uint256
         uint160 startingFunderIndex = 1;
         //we create a loop
-        for(uint160 i = startingFunderIndex; i < numberOfFunders; i++){
+        for (uint160 i = startingFunderIndex; i < numberOfFunders; i++) {
             // vm.prank new address
             // vm.deal new address
             // address (1) just dont use 0 address as often reverts
@@ -119,12 +124,12 @@ modifier funded() {
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
         uint256 startingFundMeBalance = address(fundMe).balance;
 
-    // Act
+        // Act
         vm.startPrank(fundMe.getOwner());
         fundMe.withdraw();
         vm.stopPrank();
 
-    // Assert
+        // Assert
         assert(address(fundMe).balance == 0);
         assert(startingFundMeBalance + startingOwnerBalance == fundMe.getOwner().balance);
     }
@@ -134,7 +139,7 @@ modifier funded() {
         uint160 numberOfFunders = 10; //if you want to use number to generate addresses you must use uint160 instead of uint256
         uint160 startingFunderIndex = 1;
         //we create a loop
-        for(uint160 i = startingFunderIndex; i < numberOfFunders; i++){
+        for (uint160 i = startingFunderIndex; i < numberOfFunders; i++) {
             // vm.prank new address
             // vm.deal new address
             // address (1) just dont use 0 address as often reverts
@@ -145,23 +150,20 @@ modifier funded() {
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
         uint256 startingFundMeBalance = address(fundMe).balance;
 
-    // Debugging: Log balances before withdrawal
-    //   console.log("Starting Owner Balance: ", startingOwnerBalance);
-    //    console.log("Starting FundMe Balance: ", startingFundMeBalance);
+        // Debugging: Log balances before withdrawal
+        //   console.log("Starting Owner Balance: ", startingOwnerBalance);
+        //    console.log("Starting FundMe Balance: ", startingFundMeBalance);
 
-    // Act
+        // Act
         vm.startPrank(fundMe.getOwner());
         fundMe.cheaperWithdraw();
         vm.stopPrank();
-    // Debugging: Log balances after withdrawal
-    console.log("Final Owner Balance: ", fundMe.getOwner().balance);
-    console.log("Final FundMe Balance: ", address(fundMe).balance);
+        // Debugging: Log balances after withdrawal
+        console.log("Final Owner Balance: ", fundMe.getOwner().balance);
+        console.log("Final FundMe Balance: ", address(fundMe).balance);
 
-    
-
-    // Assert
+        // Assert
         assert(address(fundMe).balance == 0);
         assert(startingFundMeBalance + startingOwnerBalance == fundMe.getOwner().balance);
     }
 }
-
