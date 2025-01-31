@@ -32,6 +32,7 @@ Before you begin, ensure you have the following installed:
    ```bash
    git clone https://github.com/AnaAse/foundry-fund-me-f23
    cd foundry-fund-me-f23
+   forge build
 
     Install dependencies:
     bash
