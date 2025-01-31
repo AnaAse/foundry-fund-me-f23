@@ -13,7 +13,7 @@ contract ZkSyncDevOps is Test, ZkSyncChainChecker, FoundryZkSyncChecker {
         bool success;
         // Don't worry about what this "assembly" thing is for now
         assembly {
-        success := call(gas(), ripemd, 0, 0, 0, 0, 0)
+            success := call(gas(), ripemd, 0, 0, 0, 0, 0)
         }
         assert(success);
     }
