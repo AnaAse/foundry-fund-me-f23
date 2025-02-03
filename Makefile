@@ -22,8 +22,6 @@ install :; forge install cyfrin/foundry-devops@0.2.2 --no-commit && forge instal
 # Update Dependencies
 update:; forge update
 
-build:; forge build
-
 zkbuild :; forge build --zksync
 
 test :; forge test
