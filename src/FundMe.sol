@@ -8,8 +8,10 @@ import {PriceConverter} from "./PriceConverter.sol";
 error FundMe__NotOwner();
 
 contract FundMe {
+    // Type Declarations
     using PriceConverter for uint256;
 
+    // State variables
     mapping(address => uint256) private s_addressToAmountFunded; //antes sin s_, ahora hemos añadido
     address[] private s_funders; //antes sin s_, ahora hemos añadido
 
@@ -22,13 +24,6 @@ contract FundMe {
         i_owner = msg.sender;
         s_priceFeed = AggregatorV3Interface(priceFeed);
     }
-
-    //function fund() public payable {
-    //    require(msg.value.getConversionRate() >= MINIMUM_USD, "You need to spend more ETH!");
-    // require(PriceConverter.getConversionRate(msg.value) >= MINIMUM_USD, "You need to spend more ETH!");
-    //  addressToAmountFunded[msg.sender] += msg.value;
-    //  funders.push(msg.sender);
-    //}
 
     function fund() public payable {
         require(msg.value.getConversionRate(s_priceFeed) >= MINIMUM_USD, "You need to spend more ETH!");
@@ -69,13 +64,13 @@ contract FundMe {
         s_funders = new address[](0);
         // Transfer vs call vs Send
         // payable(msg.sender).transfer(address(this).balance);
-     //   (bool success,) = i_owner.call{value: address(this).balance}("");
-     //   require(success);
-     // }
+        (bool success,) = i_owner.call{value: address(this).balance}("");
+        require(success);
+      }
 
-        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
-        require(callSuccess, "Call failed");
-     }
+      //  (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
+      //  require(callSuccess, "Call failed");
+    // }
     // Explainer from: https://solidity-by-example.org/fallback/
     // Ether is sent to contract
     //      is msg.data empty?
