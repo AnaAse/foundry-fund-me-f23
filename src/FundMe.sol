@@ -69,13 +69,13 @@ contract FundMe {
         s_funders = new address[](0);
         // Transfer vs call vs Send
         // payable(msg.sender).transfer(address(this).balance);
-        (bool success,) = i_owner.call{value: address(this).balance}("");
-        require(success);
-    }
+     //   (bool success,) = i_owner.call{value: address(this).balance}("");
+     //   require(success);
+     // }
 
-    //    (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
-    //    require(callSuccess, "Call failed");
-    // }
+        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call failed");
+     }
     // Explainer from: https://solidity-by-example.org/fallback/
     // Ether is sent to contract
     //      is msg.data empty?
